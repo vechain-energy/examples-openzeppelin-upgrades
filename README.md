@@ -6,9 +6,9 @@ Upgrading a contract to extend functionality or fix bugs is important.
 
 The standard tools for Hardhat are linked with the ethereum-standard, for example `@openzeppelin/hardhat-upgrades` works like a charm but fails in the VeChain environment.
 
-The magic in `@openzeppelin/hardhat-upgrades` however is deploying contracts and calling functions. THe same can be done manually.
+The magic in `@openzeppelin/hardhat-upgrades` however is deploying contracts and calling functions. The same can be done manually.
 
-The following steps will show how to will deploy Contract and upgrade it with new functionality using all the standard tools and contracts.
+The following steps will show how to deploy a contract and upgrade it with new functionality using all the standard tools and contracts.
 
 ## Setup project from scratch using Hardhat
 
@@ -81,7 +81,9 @@ contract MyToken_v1 is Initializable, ERC721Upgradeable, OwnableUpgradeable, UUP
 ## Deploy with proxy
 
 1. The NFT Contract ist deployed first
-2. Then the `ERC1967Proxy` from OpenZeppelin is imported and deployed with a reference to the newly deployed NFT Contract
+2. The `ERC1967Proxy` from OpenZeppelin is imported and deployed 
+	3. A reference to the previously deployed NFT Contract is given
+	4. And the NFT contracts `initialize()` is called thru the proxy
 3. The address of both deployments is written to `status.json` for future reference
 
 The script is put into `scripts/01-deploy.js`:
@@ -95,12 +97,10 @@ const Web3EthAbi = require('web3-eth-abi')
 async function main() {
   await hre.run('compile')
 
-
   // deploy initial contract  
   const MyToken = await hre.thor.getContractFactory("MyToken")
   const myToken = await MyToken.deploy()
   console.log("MyToken 1.0 deployed to:", myToken.address)
-
 
   // calculate initialize() call during deployment
   const { abi } = await hre.artifacts.readArtifact("MyToken");
@@ -137,7 +137,7 @@ Proxy deployed to: 0x39fa815f8e3d095789E730D08D1E250cf0e002ca
 
 ## Configure new contract
 
-To fix the missing minting-functionality the Wizard is used to create a modified contract `MyToken_v2` and put in `contracts/MyToken_v2`.
+To fix the missing minting-functionality the wizard is used to create a modified contract `MyToken_v2` in `contracts/MyToken_v2.sol`.
 
 Using a different contract name is important to access the correct version in each deployment step.
 
@@ -177,7 +177,7 @@ contract MyToken_v2 is Initializable, ERC721Upgradeable, OwnableUpgradeable, UUP
 
 [EIP1967](https://docs.openzeppelin.com/contracts/4.x/api/proxy#erc1967) is the standard that defines how proxies behave and its bytecode was used during the initial deployment.
 
-To point the proxy to another contract the `upgradeTo` function will be called. The ABI with its functions definition is at a different location. `UUPSUpgradeable` is therefore imported and used to communicate with the deployed proxy.
+With `upgradeTo` the proxy can point to a different contract address. The ABI for this function definition is at a different location. `UUPSUpgradeable` is therefore imported and used to communicate with the deployed proxy.
 
 In addition the first token is minted to the deploying address:
 
