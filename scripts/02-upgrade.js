@@ -19,8 +19,12 @@ async function main() {
   const [deployer] = await hre.thor.getSigners()
   const address = await deployer.getAddress()
   const proxiedMyToken = await hre.thor.getContractAt("MyToken_v2", status.proxyAddress)
-  await proxiedMyToken.safeMint(address, 1)
-  console.log(`Minted Token #1 to ${address}`)
+
+  await proxiedMyToken.safeMint(address)
+  console.log(`Minted Token to ${address}`)
+
+  const owner = await proxiedMyToken.owner()
+  console.log(`Contract Owner is ${owner}`)
 }
 
 main()
